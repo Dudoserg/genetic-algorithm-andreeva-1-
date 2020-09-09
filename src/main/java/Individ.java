@@ -2,13 +2,12 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 
 @Getter
 @Setter
 public class Individ {
 
-    public static int ARR_SIZE = 64;
+    public static int ARR_SIZE = 32;
 
     private double func;
     private double survivalRate;
@@ -18,20 +17,20 @@ public class Individ {
     private  double distance;
 
     private int arr[] = new int[ARR_SIZE];
-    public double x;
+    public int x;
     public String str;
 
 
     public Individ() {
     }
 
-    public Individ(double num) {
-        this.str = this.doubleToStringBinary(num);
+    public Individ(int num) {
+        this.str = this.intToStringBinary(num);
         this.arr = this.stringToArr(str);
     }
 
-    public String doubleToStringBinary( double num){
-        return Long.toBinaryString(Double.doubleToRawLongBits(num));
+    public String intToStringBinary(int num){
+        return Integer.toBinaryString(num);
     }
 
     public int[] stringToArr(String str) {
@@ -50,19 +49,12 @@ public class Individ {
         return str;
     }
 
-    private double toDouble(String str) {
-
-        double doubleVal =
-                Double.longBitsToDouble(
-                        new BigInteger(
-                                str, 2
-                        ).longValue()
-                );
-        return doubleVal;
+    private int toInteger(String str) {
+        return Integer.parseInt(str, 2);
     }
 
-    public double arrToDouble(){
-        return toDouble(arrToString(this.arr));
+    public int arrToInteger(){
+        return toInteger(arrToString(this.arr));
     }
 
 
