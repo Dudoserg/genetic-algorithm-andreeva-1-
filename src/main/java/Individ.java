@@ -8,30 +8,50 @@ import java.nio.ByteBuffer;
 @Setter
 public class Individ {
 
-    private static int ARR_SIZE = 64;
-    
-    private int arr[] = new int[ARR_SIZE];
+    public static int ARR_SIZE = 64;
 
+    private double func;
+    private double survivalRate;
+
+    private double survivePercent;
+    // расстояние до лучшего решения
+    private  double distance;
+
+    private int arr[] = new int[ARR_SIZE];
+    public double x;
     public String str;
 
-    public Individ(double num) {
-       str = Long.toBinaryString(Double.doubleToRawLongBits(num));
-//       str2Arr(str);
-        System.out.println(str.length());
-        for(int i = 0 ; i < ARR_SIZE; i++){
-            if( str.length() >= i){
-                arr[i] = str.charAt(i) - '0';
-            }else {
-                arr[i] = -99999999;
-            }
-        }
+
+    public Individ() {
     }
 
-    public double toDouble(){
+    public Individ(double num) {
+        this.str = this.doubleToStringBinary(num);
+        this.arr = this.stringToArr(str);
+    }
+
+    public String doubleToStringBinary( double num){
+        return Long.toBinaryString(Double.doubleToRawLongBits(num));
+    }
+
+    public int[] stringToArr(String str) {
+        int[] arr = new int[ARR_SIZE];
+        for (int i = 0 + ARR_SIZE - str.length(); i < ARR_SIZE; i++) {
+            arr[i] = str.charAt(i - (ARR_SIZE - str.length())) - '0';
+        }
+        return arr;
+    }
+
+    private String arrToString(int [] arr){
         String str = "";
-        for(int i = 0 ; i < ARR_SIZE; i++){
+        for (int i = 0; i < ARR_SIZE; i++) {
             str += arr[i];
         }
+        return str;
+    }
+
+    private double toDouble(String str) {
+
         double doubleVal =
                 Double.longBitsToDouble(
                         new BigInteger(
@@ -40,6 +60,13 @@ public class Individ {
                 );
         return doubleVal;
     }
+
+    public double arrToDouble(){
+        return toDouble(arrToString(this.arr));
+    }
+
+
+
 
 //    private int[] str2Arr(String str){
 //
