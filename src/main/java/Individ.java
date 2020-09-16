@@ -1,13 +1,11 @@
 import lombok.Getter;
 import lombok.Setter;
 
-import java.math.BigInteger;
-
 @Getter
 @Setter
 public class Individ {
 
-    public static int ARR_SIZE = 32;
+    public static int ARR_SIZE = 64;
 
     private double func;
     private double survivalRate;
@@ -16,29 +14,37 @@ public class Individ {
     // расстояние до лучшего решения
     private  double distance;
 
-    private int[] arr_first = new int[ARR_SIZE];
-    public int x;
-
-    private int arr_second[] = new int[ARR_SIZE];
-    public int x_second;
-
+    private int arr[] = new int[ARR_SIZE];
+    public double x;
     public String str;
-    public String str_second;
 
 
     public Individ() {
     }
 
-    public Individ(int num_first, int num_second) {
-        this.str = this.intToStringBinary(num_first);
-        this.arr_first = this.stringToArr(str);
-
-        this.str_second = this.intToStringBinary(num_second);
-        this.arr_second = this.stringToArr(str_second);
+    public Individ(double num) {
+        this.str = doubleToStringBinary(num);
+        this.arr = this.stringToArr(this.str);
     }
 
     public String intToStringBinary(int num){
-        return Integer.toBinaryString(num);
+        String s = Integer.toBinaryString(num);
+        do{
+            s = "0" + s;
+        }while (s.length() != 32);
+        return s;
+    }
+
+    public String doubleToStringBinary(double num){
+        String tmpStr = "";
+
+        int main = (int)Math.floor(num);
+        tmpStr += this.intToStringBinary(main);
+
+
+        int drob = (int)((num - Math.floor(num)) * Math.pow(10, 9));
+        tmpStr += this.intToStringBinary(drob);
+        return tmpStr;
     }
 
     public int[] stringToArr(String str) {
@@ -57,32 +63,30 @@ public class Individ {
         return str;
     }
 
-    private int toInteger(String str) {
-        return Integer.parseInt(str, 2);
+    private double toNumber(String str) {
+        String mainStr = str.substring(0, 32);
+        String drobStr = str.substring(32, 64);
+        int main = Integer.parseInt(mainStr, 2);
+        int drob = Integer.parseInt(drobStr, 2);
+
+        double result = main + drob / Math.pow(10, 9);
+
+        return result;
     }
 
-    public int arrToInteger(int [] arr){
-        return toInteger(arrToString(arr));
+    public double arrToNumber(){
+        String s = arrToString(this.arr);
+        return toNumber(s);
     }
 
 
-
-    public double getFullNum(){
-        final int firstNum = arrToInteger(this.arr_first);
-        final int secondNum = arrToInteger(this.arr_second);
-        double tmp = secondNum;
-        do {
-            tmp = tmp / 10;
-        }while (tmp > 1);
-        return firstNum + tmp;
-    }
 
 
 //    private int[] str2Arr(String str){
 //
 //    }
 
-    
+
    /* public int[] double2Arr(double d){
         String sResult = "";
         long numberBits = Double.doubleToLongBits(d);
@@ -96,7 +100,6 @@ public class Individ {
         this.str = str;
         return arr;
     }
-
     public double arr2Double (int[] arr){
         String str = "";
         for (int i : arr) {
@@ -104,7 +107,6 @@ public class Individ {
         }
         return Double.longBitsToDouble(new BigInteger(str, 2).longValue());
     }
-
     public static  double ieeeToFloat(String binString) throws Exception {
         binString = binString.replace(" ", "");
         *//* 32-bit *//*
