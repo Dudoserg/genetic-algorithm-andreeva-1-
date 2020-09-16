@@ -6,10 +6,10 @@ import static java.lang.Math.*;
 
 public class Calc {
 
-    public double MNOGITEL = 1.2;
+    public double MNOGITEL = 1.5;
 
     public static int START = 0;
-    public static int END = 36;
+    public static int END = 35;
     public static int POPULATION_SIZE = 10;
     public static int N = 2;
 
@@ -19,8 +19,17 @@ public class Calc {
 //            mas[generateRandom(0, 10)]++;
 //        System.out.println();
 
-        for(int i = START; i < END; i++){
-            System.out.println("x = " + i + "\t" + "y = " + func(i));
+//        for(int i = START; i < END; i++){
+//            System.out.println("x = " + i + "\t" + "y = " + func(i));
+//        }
+
+        double extr = 0.0;
+        double x = 0.0;
+        for (double i = START; i < END; i += 0.00001) {
+            if (abs(func(i)) > abs(extr)) {
+                extr = func(i);
+                x = i;
+            }
         }
         System.out.println();
     }
@@ -36,13 +45,15 @@ public class Calc {
 
         // Считаем у всех функцию
         do {
-            for (int z = 0; z < 10; z++) {
+            for (int z = 0; z < 1; z++) {
                 double maxFunc = 0;
 
                 for (Individ individ : list) {
-                    final int x = individ.arrToInteger();
+                    final int x = individ.arrToInteger(individ.getArr_first());
                     individ.setX(x);
-                    final double func = func(x);
+                    final int x_second = individ.arrToInteger(individ.getArr_second());
+                    individ.setX_second(x_second);
+                    final double func = func(individ.getFullNum());
                     individ.setFunc(func);
                     if (abs(func) > abs(maxFunc)) {
                         maxFunc = func;
@@ -71,7 +82,7 @@ public class Calc {
                     individ.setSurvivePercent(v);
                     sumV += v;
                     System.out.println("individ(" + i + ") " +
-                            "x = " + individ.getX() +
+                            "x = " + individ.getFullNum() +
                             "\tfunc = " + individ.getFunc() +
                             "\tdist = " + individ.getDistance() +
                             "\t" + v + "%");
@@ -92,17 +103,30 @@ public class Calc {
 
                 // Мутируем некоторые особи
                 for (Individ individ : list) {
-                    if (Math.random() > 0.85) {
+                    if (Math.random() > 0.8) {
                         // мутации подвергается только 33 процента
 //                    mutation(individ);
-                        individ.setX(generateRandom((int) START, (int) END));
-                        individ.setArr(
-                                individ.stringToArr(
-                                        individ.intToStringBinary(
-                                                individ.getX()
-                                        )
-                                )
-                        );
+
+                        {
+                            individ.setX(generateRandom((int) START, (int) END));
+                            individ.setArr_first(
+                                    individ.stringToArr(
+                                            individ.intToStringBinary(
+                                                    individ.getX()
+                                            )
+                                    )
+                            );
+                        }
+                        {
+                            individ.setX_second(generateRandom((int) 0, (int) 99999));
+                            individ.setArr_second(
+                                    individ.stringToArr(
+                                            individ.intToStringBinary(
+                                                    individ.getX_second()
+                                            )
+                                    )
+                            );
+                        }
                         recalcValues(individ);
                         System.out.print("");
                     }
@@ -121,7 +145,7 @@ public class Calc {
                 for (int i = 0; i < list.size(); i++) {
                     Individ individ = list.get(i);
                     System.out.println("individ(" + i + ") " +
-                            "x = " + individ.getX() +
+                            "x = " + individ.getFullNum() +
                             "\tfunc = " + individ.getFunc() +
                             "\tdist = " + individ.getDistance() +
                             "\t" + individ.getSurvivePercent() + "%");
@@ -131,14 +155,35 @@ public class Calc {
 
             }
             System.out.println();
+            boolean isStop = false;
+            for (int i = 0; i < list.size(); i++) {
+                Individ individ_first = list.get(i);
+                int countSame = 0;
+                for (int k = 0; k < list.size(); k++) {
+                    Individ individ_second = list.get(k);
+                    if (abs(individ_first.getFunc() - individ_second.getFunc()) < 0.00000001) {
+                        countSame++;
+                    }
+                }
+                if (countSame / list.size() >= 0.79) {
+                    isStop = true;
+                }
+
+            }
+            if (isStop)
+                break;
         } while (true);
 
     }
 
     public void recalcValues(Individ individ) {
-        final int x = individ.arrToInteger();
+        final int x = individ.arrToInteger(individ.getArr_first());
         individ.setX(x);
-        individ.setFunc(func(x));
+
+        final int x_second = individ.arrToInteger(individ.getArr_second());
+        individ.setX_second(x_second);
+
+        individ.setFunc(func(individ.getFullNum()));
     }
 
     // Селекция
@@ -170,12 +215,23 @@ public class Calc {
     // Мутация
     public void mutation(Individ individ) {
         // реверс
-        int start = generateRandom(1, Individ.ARR_SIZE - 2);
-        int end = generateRandom(start, Individ.ARR_SIZE - 1);
-        for (int i = start; i < (end - start) / 2 + start; i++) {
-            int tmp = individ.getArr()[i];
-            individ.getArr()[i] = individ.getArr()[individ.getArr().length - i - 1];
-            individ.getArr()[individ.getArr().length - i - 1] = tmp;
+        {
+            int start = generateRandom(1, Individ.ARR_SIZE - 2);
+            int end = generateRandom(start, Individ.ARR_SIZE - 1);
+            for (int i = start; i < (end - start) / 2 + start; i++) {
+                int tmp = individ.getArr_first()[i];
+                individ.getArr_first()[i] = individ.getArr_first()[individ.getArr_first().length - i - 1];
+                individ.getArr_first()[individ.getArr_first().length - i - 1] = tmp;
+            }
+        }
+        {
+            int start = generateRandom(1, Individ.ARR_SIZE - 2);
+            int end = generateRandom(start, Individ.ARR_SIZE - 1);
+            for (int i = start; i < (end - start) / 2 + start; i++) {
+                int tmp = individ.getArr_second()[i];
+                individ.getArr_second()[i] = individ.getArr_second()[individ.getArr_second().length - i - 1];
+                individ.getArr_second()[individ.getArr_second().length - i - 1] = tmp;
+            }
         }
     }
 
@@ -192,11 +248,17 @@ public class Calc {
         for (int point = 0; point < N; point++) {
             for (int i = 0; i < areaSize; i++) {
                 if (iteration % 2 == 0) {
-                    individ_first.getArr()[index] = pair.getFirst().getArr()[index];
-                    individ_second.getArr()[index] = pair.getSecond().getArr()[index];
+                    individ_first.getArr_first()[index] = pair.getFirst().getArr_first()[index];
+                    individ_second.getArr_first()[index] = pair.getSecond().getArr_first()[index];
+
+                    individ_first.getArr_second()[index] = pair.getFirst().getArr_second()[index];
+                    individ_second.getArr_second()[index] = pair.getSecond().getArr_second()[index];
                 } else {
-                    individ_first.getArr()[index] = pair.getSecond().getArr()[index];
-                    individ_second.getArr()[index] = pair.getFirst().getArr()[index];
+                    individ_first.getArr_first()[index] = pair.getSecond().getArr_first()[index];
+                    individ_second.getArr_first()[index] = pair.getFirst().getArr_first()[index];
+
+                    individ_first.getArr_second()[index] = pair.getSecond().getArr_second()[index];
+                    individ_second.getArr_second()[index] = pair.getFirst().getArr_second()[index];
                 }
                 index++;
             }
@@ -204,11 +266,17 @@ public class Calc {
         }
         for (int i = index; i < Individ.ARR_SIZE; i++) {
             if (iteration % 2 == 0) {
-                individ_first.getArr()[index] = pair.getFirst().getArr()[index];
-                individ_second.getArr()[index] = pair.getSecond().getArr()[index];
+                individ_first.getArr_first()[index] = pair.getFirst().getArr_first()[index];
+                individ_second.getArr_first()[index] = pair.getSecond().getArr_first()[index];
+
+                individ_first.getArr_second()[index] = pair.getFirst().getArr_second()[index];
+                individ_second.getArr_second()[index] = pair.getSecond().getArr_second()[index];
             } else {
-                individ_first.getArr()[index] = pair.getSecond().getArr()[index];
-                individ_second.getArr()[index] = pair.getFirst().getArr()[index];
+                individ_first.getArr_first()[index] = pair.getSecond().getArr_first()[index];
+                individ_second.getArr_first()[index] = pair.getFirst().getArr_first()[index];
+
+                individ_first.getArr_second()[index] = pair.getSecond().getArr_second()[index];
+                individ_second.getArr_second()[index] = pair.getFirst().getArr_second()[index];
             }
             index++;
         }
@@ -217,14 +285,21 @@ public class Calc {
 //            return individ_first;
 //        else
 //            return individ_second;
-        int x_1 = individ_first.arrToInteger();
-        int x_2 = individ_second.arrToInteger();
+        int x_first_1 = individ_first.arrToInteger(individ_first.getArr_first());
+        int x_second_1 = individ_first.arrToInteger(individ_first.getArr_second());
 
-        individ_first.setX(x_1);
-        individ_second.setX(x_2);
+        int x_first_2 = individ_second.arrToInteger(individ_second.getArr_first());
+        int x_second_2 = individ_second.arrToInteger(individ_second.getArr_second());
 
-        individ_first.setFunc(func(x_1));
-        individ_second.setFunc(func(x_2));
+        individ_first.setX(x_first_1);
+        individ_first.setX_second(x_second_1);
+
+        individ_second.setX(x_first_2);
+        individ_second.setX_second(x_second_2);
+
+        individ_first.setFunc(func(individ_first.getFullNum()));
+        individ_second.setFunc(func(individ_first.getFullNum()));
+
 
         if (abs(individ_first.getFunc()) > abs(individ_second.getFunc()))
             return individ_first;
@@ -240,11 +315,11 @@ public class Calc {
             Individ first = null;
             do {
                 first = getIndividInLineWithCoeff(list, random);
-            } while (first.getX() < START || first.getX() > END);
+            } while (first.getFullNum() < START || first.getFullNum() > END);
             Individ second = null;
             do {
                 second = getIndividInLineWithCoeff(list, Math.random());
-            } while (first == second || (second.getX() < START || second.getX() > END));
+            } while (first == second || (second.getFullNum() < START || second.getFullNum() > END));
             result.add(new MyPair<>(first, second));
         }
         return result;
@@ -268,10 +343,11 @@ public class Calc {
         List<Individ> population = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             final int random = generateRandom(START, END);
+            final int random_second = generateRandom(START, END);
             System.out.println("random = " + random);
-            Individ individ = new Individ(random);
+            Individ individ = new Individ(random, random_second);
             population.add(individ);
-            System.out.println("real   = " + individ.arrToInteger());
+            System.out.println("real   = " + individ.arrToInteger(individ.getArr_first()));
 //            if (abs(individ.arrToInteger() - random) > 0.000000001)
 //                System.out.println("error");
 //            System.out.println();

@@ -16,17 +16,25 @@ public class Individ {
     // расстояние до лучшего решения
     private  double distance;
 
-    private int arr[] = new int[ARR_SIZE];
+    private int[] arr_first = new int[ARR_SIZE];
     public int x;
+
+    private int arr_second[] = new int[ARR_SIZE];
+    public int x_second;
+
     public String str;
+    public String str_second;
 
 
     public Individ() {
     }
 
-    public Individ(int num) {
-        this.str = this.intToStringBinary(num);
-        this.arr = this.stringToArr(str);
+    public Individ(int num_first, int num_second) {
+        this.str = this.intToStringBinary(num_first);
+        this.arr_first = this.stringToArr(str);
+
+        this.str_second = this.intToStringBinary(num_second);
+        this.arr_second = this.stringToArr(str_second);
     }
 
     public String intToStringBinary(int num){
@@ -53,11 +61,21 @@ public class Individ {
         return Integer.parseInt(str, 2);
     }
 
-    public int arrToInteger(){
-        return toInteger(arrToString(this.arr));
+    public int arrToInteger(int [] arr){
+        return toInteger(arrToString(arr));
     }
 
 
+
+    public double getFullNum(){
+        final int firstNum = arrToInteger(this.arr_first);
+        final int secondNum = arrToInteger(this.arr_second);
+        double tmp = secondNum;
+        do {
+            tmp = tmp / 10;
+        }while (tmp > 1);
+        return firstNum + tmp;
+    }
 
 
 //    private int[] str2Arr(String str){
