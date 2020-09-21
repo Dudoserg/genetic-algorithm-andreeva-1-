@@ -5,27 +5,36 @@ import lombok.Setter;
 @Setter
 public class Individ {
 
-    public static int ARR_SIZE = 64;
+    public static int POW = (int)Math.pow(10, 9);
+    public static int ARR_SIZE = 32;
 
-    private double func;
     private double survivalRate;
 
     private double survivePercent;
     // расстояние до лучшего решения
     private  double distance;
 
-    private int arr[] = new int[ARR_SIZE];
+//    private int hromosomeFirst[] = new int[ARR_SIZE];
+//    private int hromosomeSecond[] = new int[ARR_SIZE];
+
     public double x;
-    public String str;
+    private double y;
+
+    public String hromosomeFirstStr;
+    public String hromosomeSecondStr;
 
 
     public Individ() {
     }
 
     public Individ(double num) {
-        this.str = doubleToStringBinary(num);
-        this.arr = this.stringToArr(this.str);
+        int main = (int)Math.floor(num);
+        int drob = (int)((num - Math.floor(num)) * POW);
+
+        this.hromosomeFirstStr = intToStringBinary(main);
+        this.hromosomeSecondStr = intToStringBinary(drob);
     }
+
 
     public String intToStringBinary(int num){
         String s = Integer.toBinaryString(num);

@@ -33,9 +33,9 @@ public class Calc {
     }
 
     public double func(double x) {
-//        return (0.8 * cos(3 * x) + cos(x)) * (x - 4);
+        return (0.8 * cos(3 * x) + cos(x)) * (x - 4);
 //        return 3 * ((x) * (x )) + 150;
-        return -0.3 * ((x - 16.5) * (x - 16.5)) + 150;
+//        return -0.3 * ((x - 16.5) * (x - 16.5)) + 150;
     }
 
     public void start() throws Exception {
@@ -45,7 +45,7 @@ public class Calc {
         // Считаем у всех функцию
         do {
             for (int z = 0; z < 100; z++) {
-                double maxFunc = 150.0;
+                double maxFunc = -55.0999999;
 
                 for (Individ individ : list) {
                     final double x = individ.arrToNumber();
@@ -111,8 +111,7 @@ public class Calc {
                 System.out.println("//////////////////////////////////////////////////////////////////////");
                 // Мутируем некоторые особи
                 for (Individ individ : list) {
-                    if (Math.random() > 0.85) {
-                        // мутации подвергается только 33 процента
+                    if (Math.random() > 0.75) {
                     mutation(individ);
 //                        individ.setX(individ.getX() + generateX());
 //                        individ.setArr(
@@ -172,28 +171,20 @@ public class Calc {
 
     // Селекция
     public List<Individ> selection(List<Individ> list) {
-//        int[] mas = new int[list.size()];
-//        for (int i = 0; i < list.size() / 2; i++) {
-//            do {
-//                final int index = generateRandom(0, list.size());
-//                if (mas[index] == 0) {
-//                    mas[index] = 1;
-//                    break;
-//                }
-//            } while (true);
-//        }
-//        List<Individ> result = new ArrayList<>();
-//        for (int i = 0; i < list.size(); i++) {
-//            if (mas[i] != 0) {
-//                result.add(list.get(i));
-//            }
-//        }
-        List<Individ> result = new ArrayList<>();
+        // RANDOM
+       /* List<Individ> result = new ArrayList<>();
         do {
             final int r = this.generateRandom(0, list.size());
             result.add(list.remove(r));
         } while (result.size() != POPULATION_SIZE);
+        return result;*/
+
+        // BEST
+        List<Individ> tmp = new ArrayList<>(list);
+        tmp.sort((first, second) -> first.getFunc() >= second.getFunc() ? -1 : 1);
+        List<Individ> result = tmp.subList(0, tmp.size() > 10 ? 10 : tmp.size());
         return result;
+
     }
 
     // Мутация
