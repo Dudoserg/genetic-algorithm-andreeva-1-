@@ -1,34 +1,63 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import static java.lang.Math.*;
 
 
 public class Calc {
 
-    public double MNOGITEL = 1.2;
+    public double MNOGITEL = 1.01;
 
     public static int START = 0;
-    public static int END = 36;
+    public static int END = 35;
     public static int POPULATION_SIZE = 10;
-    public static int N = 2;
+    public static int N = 5;
+    public static int COUNT_STEP = 1000;
+    public List<Double> values = new ArrayList<>();
+    double needX = 34.56;
+
+    public Function<Double, Double> function = new Function<Double, Double>() {
+        @Override
+        public Double apply(Double x) {
+            return (x - 3) * (x - 2) * (x - 2.5) * cos(x);
+//            return (0.8 * cos(0.5 * x) + cos(x)) * (x - 4);
+        }
+    };
+    private int countIteration;
 
     public Calc() {
-//        int mas[] = new int[10];
-//        for (int i = 0; i < 100000; i++)
-//            mas[generateRandom(0, 10)]++;
-//        System.out.println();
+        double log = log(COUNT_STEP) / log(2);
+        Individ.ARR_SIZE = (int) Math.ceil(log);
+        Individ.values = this.values;
 
-        for(int i = START; i < END; i++){
-            System.out.println("x = " + i + "\t" + "y = " + func(i));
+        double stepSize = (END - START) / (double) COUNT_STEP;
+        for (double x = START; x < stepSize * Math.pow(2, Individ.ARR_SIZE); x += stepSize) {
+            values.add(x);
         }
+
+        Double max_y = 0.0;
+        Double max_x = 0.0;
+        for (Double value : values) {
+            if (value > END)
+                break;
+            double tmp_y = function.apply(value);
+            if (abs(tmp_y) > abs(max_y)) {
+                max_x = value;
+                max_y = tmp_y;
+            }
+            //System.out.println("x = " + value + "\t y = " + tmp_y);
+        }
+        System.out.println("====MAX======");
+        System.out.println("x = " + max_x + "\t y = " + max_y);
+        needX = max_x;
         System.out.println();
     }
 
-    public double func(double x) {
-        return (0.8 * cos(3 * x) + cos(x)) * (x - 4);
-//        return 3 * ((x + 23) * (x + 23)) + 150;
-    }
+//    public double func(double x) {
+//        return (0.8 * cos(3 * x) + cos(x)) * (x - 4);
+////        return 3 * ((x + 23) * (x + 23)) + 150;
+//    }
 
     public void start() throws Exception {
         List<Individ> list = generatePopulation(POPULATION_SIZE);
@@ -36,147 +65,171 @@ public class Calc {
 
         // Считаем у всех функцию
         do {
-            for (int z = 0; z < 10; z++) {
-                double maxFunc = 0;
+            double maxFunc = 0;
 
-                for (Individ individ : list) {
-                    final int x = individ.arrToInteger();
-                    individ.setX(x);
-                    final double func = func(x);
-                    individ.setFunc(func);
-                    if (abs(func) > abs(maxFunc)) {
-                        maxFunc = func;
-                    }
+            for (Individ individ : list) {
+                final double x = individ.getX();
+                final double func = function.apply(x);
+                individ.setFunc(func);
+                if (abs(func) > abs(maxFunc)) {
+                    maxFunc = func;
                 }
-                System.out.println("maxFunc = " + maxFunc);
-                System.out.println("maxFunc *" + MNOGITEL + " = " + maxFunc * MNOGITEL);
-                // Считаем коэффициент выживаемости
-                for (int i = 0; i < list.size(); i++) {
-                    Individ individ = list.get(i);
-                    final double func = individ.getFunc();
-                    final double distance = abs(maxFunc * MNOGITEL - func);
-                    individ.setDistance(distance);
-                }
-                // считаем сумму обратных коэффициентов
-                double sum = 0.0;
-                for (Individ individ : list) {
-                    sum += 1.0 / individ.getDistance();
-                }
-                // Считаем коэффициент выживаемости в процентах
-                double sumV = 0.0;
-                System.out.println("===========================");
-                for (int i = 0; i < list.size(); i++) {
-                    Individ individ = list.get(i);
-                    final double v = (1.0 / individ.getDistance()) / sum;
-                    individ.setSurvivePercent(v);
-                    sumV += v;
-                    System.out.println("individ(" + i + ") " +
-                            "x = " + individ.getX() +
-                            "\tfunc = " + individ.getFunc() +
-                            "\tdist = " + individ.getDistance() +
-                            "\t" + v + "%");
-
-                }
-
-                // Выбираем пары для скрещивания
-                final List<MyPair<Individ, Individ>> pairs = createPair(list);
-
-                // Получаем потомство
-                List<Individ> childrens = new ArrayList<>();
-                for (MyPair<Individ, Individ> pair : pairs) {
-                    final Individ child = crossbreeding(pair, N);
-                    childrens.add(child);
-                }
-
-                list.addAll(childrens);
-
-                // Мутируем некоторые особи
-                for (Individ individ : list) {
-                    if (Math.random() > 0.85) {
-                        // мутации подвергается только 33 процента
-//                    mutation(individ);
-                        individ.setX(generateRandom((int) START, (int) END));
-                        individ.setArr(
-                                individ.stringToArr(
-                                        individ.intToStringBinary(
-                                                individ.getX()
-                                        )
-                                )
-                        );
-                        recalcValues(individ);
-                        System.out.print("");
-                    }
-                }
-
-                // СЕЛЕКЦИЯ
-                for (int i = list.size() - 1; i >= 0; i--) {
-                    Individ individ = list.get(i);
-                    if (individ.getX() < START || individ.getX() > END)
-                        list.remove(individ);
-                }
-                System.out.println("list.size() = " + list.size());
-                list = selection(list);
-
-                System.out.println("//////////////////////////////////////////////////////////////////////");
-                for (int i = 0; i < list.size(); i++) {
-                    Individ individ = list.get(i);
-                    System.out.println("individ(" + i + ") " +
-                            "x = " + individ.getX() +
-                            "\tfunc = " + individ.getFunc() +
-                            "\tdist = " + individ.getDistance() +
-                            "\t" + individ.getSurvivePercent() + "%");
-
-                }
-                System.out.println("//////////////////////////////////////////////////////////////////////");
+            }
+            System.out.println("maxFunc = " + maxFunc);
+            System.out.println("maxFunc *" + MNOGITEL + " = " + maxFunc * MNOGITEL);
+            // Считаем коэффициент выживаемости
+            for (int i = 0; i < list.size(); i++) {
+                Individ individ = list.get(i);
+                final double func = individ.getFunc();
+                final double distance = abs(maxFunc * MNOGITEL - func);
+                individ.setDistance(distance);
+            }
+            // считаем сумму обратных коэффициентов
+            double sum = 0.0;
+            for (Individ individ : list) {
+                sum += 1.0 / individ.getDistance();
+            }
+            // Считаем коэффициент выживаемости в процентах
+            double sumV = 0.0;
+            System.out.println("===========================");
+            for (int i = 0; i < list.size(); i++) {
+                Individ individ = list.get(i);
+                final double v = (1.0 / individ.getDistance()) / sum;
+                individ.setSurvivePercent(v);
+                sumV += v;
+                System.out.println("individ(" + i + ") " +
+                        "x = " + individ.getX() +
+                        "\tfunc = " + individ.getFunc() +
+                        "\tdist = " + individ.getDistance() +
+                        "\t" + v + "%");
 
             }
-            System.out.println();
+
+            // Выбираем пары для скрещивания
+            final List<MyPair<Individ, Individ>> pairs = createPair(list);
+
+            // Получаем потомство
+            List<Individ> childrens = new ArrayList<>();
+            for (MyPair<Individ, Individ> pair : pairs) {
+                final Individ child = crossbreeding(pair, N);
+                childrens.add(child);
+            }
+
+            list.addAll(childrens);
+
+            // Мутируем некоторые особи
+            for (Individ individ : list) {
+                if (Math.random() > 0.55) {
+                    // мутации подвергается только 33 процента
+//                    mutation(individ);
+                    int random = generateRandom(0, COUNT_STEP);
+                    individ.CHANGE_X(random);
+                    individ.getX();
+
+                    recalcValues(individ);
+                    System.out.print("");
+                }
+            }
+            System.out.println("////////////////////////mutation://////////////////////////////////////////////");
+            for (int i = 0; i < list.size(); i++) {
+                Individ individ = list.get(i);
+                System.out.println("individ(" + i + ") " +
+                        "x = " + individ.getX() +
+                        "\tfunc = " + individ.getFunc() +
+                        "\tdist = " + individ.getDistance() +
+                        "\t" + individ.getSurvivePercent() + "%");
+
+            }
+            System.out.println("//////////////////////////////////////////////////////////////////////");
+            // СЕЛЕКЦИЯ
+            for (int i = list.size() - 1; i >= 0; i--) {
+                Individ individ = list.get(i);
+                if (individ.getX() < START || individ.getX() > END)
+                    list.remove(individ);
+            }
+            System.out.println("list.size() = " + list.size());
+            list = selection(list);
+
+            System.out.println("////////////////////////selection://////////////////////////////////////////////");
+            for (int i = 0; i < list.size(); i++) {
+                Individ individ = list.get(i);
+                System.out.println("individ(" + i + ") " +
+                        "x = " + individ.getX() +
+                        "\tfunc = " + individ.getFunc() +
+                        "\tdist = " + individ.getDistance() +
+                        "\t" + individ.getSurvivePercent() + "%");
+
+            }
+            System.out.println("//////////////////////////////////////////////////////////////////////");
+
+            countIteration++;
+            int countCompare = 0;
+            for (int i = 0; i < list.size(); i++) {
+                Individ individ = list.get(i);
+                double x = individ.getX();
+                if (Math.abs(needX - x) < 0.01)
+                    countCompare++;
+            }
+            if (countCompare > list.size() / 2)
+                break;
+
         } while (true);
 
+        System.out.println("============================================================");
+        System.out.println(countIteration++);
     }
 
     public void recalcValues(Individ individ) {
-        final int x = individ.arrToInteger();
-        individ.setX(x);
-        individ.setFunc(func(x));
+        final double x = individ.getX();
+        individ.setFunc(function.apply(x));
     }
 
     // Селекция
     public List<Individ> selection(List<Individ> list) {
-//        int[] mas = new int[list.size()];
-//        for (int i = 0; i < list.size() / 2; i++) {
-//            do {
-//                final int index = generateRandom(0, list.size());
-//                if (mas[index] == 0) {
-//                    mas[index] = 1;
-//                    break;
-//                }
-//            } while (true);
-//        }
-//        List<Individ> result = new ArrayList<>();
-//        for (int i = 0; i < list.size(); i++) {
-//            if (mas[i] != 0) {
-//                result.add(list.get(i));
-//            }
-//        }
-        List<Individ> result = new ArrayList<>();
+        // RANDOM
+       /* List<Individ> result = new ArrayList<>();
         do {
             final int r = this.generateRandom(0, list.size());
             result.add(list.remove(r));
         } while (result.size() != POPULATION_SIZE);
+        return result;*/
+        list.forEach(individ -> {
+            individ.setFunc(function.apply(individ.getX()));
+        });
+        // BEST
+        List<Individ> tmp = new ArrayList<>(list);
+        tmp.sort((first, second) -> abs(first.getFunc()) >= abs(second.getFunc()) ? -1 : 1);
+        List<Individ> result = tmp.subList(0, tmp.size() > 10 ? 10 : tmp.size());
         return result;
+
     }
 
     // Мутация
     public void mutation(Individ individ) {
+        individ.getX();
         // реверс
-        int start = generateRandom(1, Individ.ARR_SIZE - 2);
-        int end = generateRandom(start, Individ.ARR_SIZE - 1);
-        for (int i = start; i < (end - start) / 2 + start; i++) {
-            int tmp = individ.getArr()[i];
-            individ.getArr()[i] = individ.getArr()[individ.getArr().length - i - 1];
-            individ.getArr()[individ.getArr().length - i - 1] = tmp;
-        }
+        int random = generateRandom(0, Individ.ARR_SIZE);
+        individ.setStr(changeCharacter(individ.getStr(), random));
+        individ.getX();
+
+        individ.getX();
+        // реверс
+        int random2 = generateRandom(0, Individ.ARR_SIZE);
+        individ.setStr(changeCharacter(individ.getStr(), random2));
+        individ.getX();
+        System.out.print("");
+    }
+
+    private String changeCharacter(String s, int index) {
+        StringBuilder str = new StringBuilder(s);
+        str.setCharAt(index, str.charAt(index) == '0' ? '1' : '0');
+        return str.toString();
+    }
+
+    private String setByIndex(String s, Character character, int index) {
+        StringBuilder str = new StringBuilder(s);
+        str.setCharAt(index, character);
+        return str.toString();
     }
 
     /// Скрещивание
@@ -187,49 +240,35 @@ public class Calc {
         int areaSize = Individ.ARR_SIZE / N;
 
         int iteration = 0;
-
-        int index = 0;
-        for (int point = 0; point < N; point++) {
-            for (int i = 0; i < areaSize; i++) {
-                if (iteration % 2 == 0) {
-                    individ_first.getArr()[index] = pair.getFirst().getArr()[index];
-                    individ_second.getArr()[index] = pair.getSecond().getArr()[index];
-                } else {
-                    individ_first.getArr()[index] = pair.getSecond().getArr()[index];
-                    individ_second.getArr()[index] = pair.getFirst().getArr()[index];
-                }
-                index++;
+        String[] first_arr = splitByNumber(pair.getFirst().getStr(), pair.getFirst().getStr().length() / N);
+        String[] second_arr = splitByNumber(pair.getSecond().getStr(), pair.getSecond().getStr().length() / N);
+        StringBuilder builder_first = new StringBuilder("");
+        StringBuilder builder_second = new StringBuilder("");
+        for (int i = 0; i < first_arr.length; i++) {
+            if (iteration % 2 == 0) {
+                builder_first.append(first_arr[i]);
+                builder_second.append(second_arr[i]);
+            } else {
+                builder_first.append(second_arr[i]);
+                builder_second.append(first_arr[i]);
             }
             iteration++;
         }
-        for (int i = index; i < Individ.ARR_SIZE; i++) {
-            if (iteration % 2 == 0) {
-                individ_first.getArr()[index] = pair.getFirst().getArr()[index];
-                individ_second.getArr()[index] = pair.getSecond().getArr()[index];
-            } else {
-                individ_first.getArr()[index] = pair.getSecond().getArr()[index];
-                individ_second.getArr()[index] = pair.getFirst().getArr()[index];
-            }
-            index++;
-        }
+        individ_first.setStr(builder_first.toString());
+        individ_second.setStr(builder_second.toString());
 
-//        if (Math.random() > 0.5)
-//            return individ_first;
-//        else
-//            return individ_second;
-        int x_1 = individ_first.arrToInteger();
-        int x_2 = individ_second.arrToInteger();
-
-        individ_first.setX(x_1);
-        individ_second.setX(x_2);
-
-        individ_first.setFunc(func(x_1));
-        individ_second.setFunc(func(x_2));
+        individ_first.setFunc(function.apply(individ_first.getX()));
+        individ_second.setFunc(function.apply(individ_second.getX()));
 
         if (abs(individ_first.getFunc()) > abs(individ_second.getFunc()))
             return individ_first;
         else
             return individ_second;
+    }
+
+    // разбиваем строку на части
+    private static String[] splitByNumber(String str, int size) {
+        return (size < 1 || str == null) ? null : str.split("(?<=\\G.{" + size + "})");
     }
 
     // Создаем пары родителей( у наиболее сильной особи, шанс размножиться больше)
@@ -267,11 +306,12 @@ public class Calc {
     public List<Individ> generatePopulation(int size) {
         List<Individ> population = new ArrayList<>();
         for (int i = 0; i < size; i++) {
-            final int random = generateRandom(START, END);
+            final int random = generateRandom(0, COUNT_STEP);
             System.out.println("random = " + random);
             Individ individ = new Individ(random);
+            individ.getX();
             population.add(individ);
-            System.out.println("real   = " + individ.arrToInteger());
+            System.out.println("real   = " + individ.getX());
 //            if (abs(individ.arrToInteger() - random) > 0.000000001)
 //                System.out.println("error");
 //            System.out.println();

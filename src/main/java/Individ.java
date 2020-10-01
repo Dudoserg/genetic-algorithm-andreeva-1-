@@ -2,60 +2,52 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigInteger;
+import java.util.List;
 
 @Getter
 @Setter
 public class Individ {
 
     public static int ARR_SIZE = 32;
+    public static List<Double> values;
 
     private double func;
+    private double x;
     private double survivalRate;
 
     private double survivePercent;
     // расстояние до лучшего решения
     private  double distance;
 
-    private int arr[] = new int[ARR_SIZE];
-    public int x;
     public String str;
-
 
     public Individ() {
     }
 
+    public double getX(){
+        int i = this.toInteger(str);
+        x = values.get(i);
+        return x;
+    }
+
+
+
     public Individ(int num) {
         this.str = this.intToStringBinary(num);
-        this.arr = this.stringToArr(str);
     }
 
     public String intToStringBinary(int num){
-        return Integer.toBinaryString(num);
-    }
-
-    public int[] stringToArr(String str) {
-        int[] arr = new int[ARR_SIZE];
-        for (int i = 0 + ARR_SIZE - str.length(); i < ARR_SIZE; i++) {
-            arr[i] = str.charAt(i - (ARR_SIZE - str.length())) - '0';
-        }
-        return arr;
-    }
-
-    private String arrToString(int [] arr){
-        String str = "";
-        for (int i = 0; i < ARR_SIZE; i++) {
-            str += arr[i];
-        }
-        return str;
+        StringBuilder s = new StringBuilder(Integer.toBinaryString(num));
+        while (s.length() < ARR_SIZE)
+            s.insert(0, '0');
+        return s.toString();
     }
 
     private int toInteger(String str) {
         return Integer.parseInt(str, 2);
     }
 
-    public int arrToInteger(){
-        return toInteger(arrToString(this.arr));
-    }
+
 
 
 
@@ -102,4 +94,9 @@ public class Individ {
             throw new Exception("Does not represent internal bits of a floating-point number");
         }
     }*/
+
+    public void CHANGE_X(int x){
+        this.str = this.intToStringBinary(x);
+        this.getX();
+    }
 }
