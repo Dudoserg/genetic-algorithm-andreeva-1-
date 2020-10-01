@@ -57,4 +57,20 @@ class Converter {
 
         return binary;
     }
+
+    public int binaryToInt(String binary) {
+        return Integer.parseInt(binary, 2);
+    }
+
+    public static void main(String[] args) {
+        Converter converter = new Converter();
+        String str = "";
+        str = "01111";
+        System.out.println("if gray\t" + converter.binaryToInt(converter.graytoBinary(str)));
+        System.out.println("if binary\t" + converter.binaryToInt(str));
+        System.out.println("\n");
+        str = "11111";
+        System.out.println("if gray\t" + converter.binaryToInt(converter.graytoBinary(str)));
+        System.out.println("if binary\t" + converter.binaryToInt(str));
+    }
 }

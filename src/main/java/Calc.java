@@ -6,12 +6,12 @@ import static java.lang.Math.*;
 
 public class Calc {
 
-    public double MNOGITEL = 1.00;
+    public double MNOGITEL = 1.20;
 
     public static int START = 0;
     public static int END = 36;
     public static int POPULATION_SIZE = 10;
-    public static int N = 2;
+    public static int N = 16;
 
     public Calc() {
         MyPair<Double, Double> max = new MyPair<>(0.0, 0.0);
@@ -21,15 +21,9 @@ public class Calc {
                 max.setFirst(x);
                 max.setSecond(y);
             }
-//            System.out.println("x = " + x + "\t" + "y = " + y);
         }
         System.out.println("MAX VALUE: " + "x = " + max.getFirst() + "\t" + "y = " + max.getSecond());
-
-
-//        for(int i = START; i < END; i++){
-//            System.out.println("x = " + i + "\t" + "y = " + func(i));
-//        }
-        System.out.println();
+        System.out.println("\n\n\n\n");
     }
 
     public double func(double x) {
@@ -40,21 +34,18 @@ public class Calc {
 
     public void start() throws Exception {
         List<Individ> list = generatePopulation(POPULATION_SIZE);
-
-
-        // Считаем у всех функцию
+        System.out.println("\n\n\n\n");
         do {
-            for (int z = 0; z < 100; z++) {
-                double maxFunc = -55.0999999;
+            for (int z = 0; z < 10000; z++) {
+                double maxFunc = 0;
 
                 for (Individ individ : list) {
-                    final double x = individ.arrToNumber();
-                    int tmp = (int) x;
-                    individ.setX(x);
-                    final double func = func(x);
-                    individ.setFunc(func);
-                    if (abs(func) > abs(maxFunc)) {
-                        maxFunc = func;
+                    final double x = individ.getX();
+                    individ.setXAndHromosome(x);
+                    final double y = func(x);
+                    individ.setY(y);
+                    if (abs(y) > abs(maxFunc)) {
+                        maxFunc = y;
                     }
                 }
                 System.out.println("maxFunc = " + maxFunc);
@@ -62,7 +53,7 @@ public class Calc {
                 // Считаем коэффициент выживаемости
                 for (int i = 0; i < list.size(); i++) {
                     Individ individ = list.get(i);
-                    final double func = individ.getFunc();
+                    final double func = individ.getY();
                     final double distance = abs(maxFunc * MNOGITEL - func);
                     individ.setDistance(distance);
                 }
@@ -81,12 +72,12 @@ public class Calc {
                     sumV += v;
                     System.out.println("individ(" + i + ") " +
                             "x = " + individ.getX() +
-                            "\tfunc = " + individ.getFunc() +
+                            "\tfunc = " + individ.getY() +
                             "\tdist = " + individ.getDistance() +
                             "\t" + v + "%");
 
                 }
-
+                assert  Math.abs(sumV - 1.0) < 0.0000001;
                 // Выбираем пары для скрещивания
                 final List<MyPair<Individ, Individ>> pairs = createPair(list);
 
@@ -103,7 +94,7 @@ public class Calc {
                     Individ individ = list.get(i);
                     System.out.println("individ(" + i + ") " +
                             "x = " + individ.getX() +
-                            "\tfunc = " + individ.getFunc() +
+                            "\tfunc = " + individ.getY() +
                             "\tdist = " + individ.getDistance() +
                             "\t" + individ.getSurvivePercent() + "%");
 
@@ -112,7 +103,7 @@ public class Calc {
                 // Мутируем некоторые особи
                 for (Individ individ : list) {
                     if (Math.random() > 0.75) {
-                    mutation(individ);
+                        mutation(individ);
 //                        individ.setX(individ.getX() + generateX());
 //                        individ.setArr(
 //                                individ.stringToArr(
@@ -121,7 +112,7 @@ public class Calc {
 //                                        )
 //                                )
 //                        );
-                        recalcValues(individ);
+                        recalc_X_Y(individ);
                         System.out.print("");
                     }
                 }
@@ -130,7 +121,7 @@ public class Calc {
                     Individ individ = list.get(i);
                     System.out.println("individ(" + i + ") " +
                             "x = " + individ.getX() +
-                            "\tfunc = " + individ.getFunc() +
+                            "\tfunc = " + individ.getY() +
                             "\tdist = " + individ.getDistance() +
                             "\t" + individ.getSurvivePercent() + "%");
 
@@ -150,7 +141,7 @@ public class Calc {
                     Individ individ = list.get(i);
                     System.out.println("individ(" + i + ") " +
                             "x = " + individ.getX() +
-                            "\tfunc = " + individ.getFunc() +
+                            "\tfunc = " + individ.getY() +
                             "\tdist = " + individ.getDistance() +
                             "\t" + individ.getSurvivePercent() + "%");
 
@@ -163,10 +154,10 @@ public class Calc {
 
     }
 
-    public void recalcValues(Individ individ) {
-        final double x = individ.arrToNumber();
+    public void recalc_X_Y(Individ individ) {
+        double x = individ.getX_FromHromosome();
         individ.setX(x);
-        individ.setFunc(func(x));
+        individ.setY(func(x));
     }
 
     // Селекция
@@ -181,7 +172,7 @@ public class Calc {
 
         // BEST
         List<Individ> tmp = new ArrayList<>(list);
-        tmp.sort((first, second) -> first.getFunc() >= second.getFunc() ? -1 : 1);
+        tmp.sort((first, second) -> first.getY() >= second.getY() ? -1 : 1);
         List<Individ> result = tmp.subList(0, tmp.size() > 10 ? 10 : tmp.size());
         return result;
 
@@ -198,68 +189,92 @@ public class Calc {
 //            individ.getArr()[individ.getArr().length - i - 1] = tmp;
 //        }
 
-        // cлучайная мутация пары 5 байт
-        for(int i = 0 ; i < 5; i++){
+        // cлучайная мутация  5 байт
+        int countSwap = 3;
+        for (int i = 0; i < countSwap; i++) {
             int random = 0;
-            do{
+            do {
                 random = generateRandom(0, Individ.ARR_SIZE);
-            }while (random == 0 || random == 32);
-            individ.getArr()[random] = individ.getArr()[random] == 1 ? 0 : 1;
+            } while (random <= 0 || random >= 32);
+            String tmpStr = individ.getHromosomeFirstStr().substring(0, random)
+                    + (individ.getHromosomeFirstStr().charAt(random) == '0' ? '1' : '0')
+                    + individ.getHromosomeFirstStr().substring(random + 1);
+            individ.setHromosomeFirstStr(tmpStr);
         }
-        recalcValues(individ);
+        for (int i = 0; i < countSwap; i++) {
+            int random = 0;
+            do {
+                random = generateRandom(0, Individ.ARR_SIZE);
+            } while (random <= 0 || random >= 32);
+            String tmpStr = individ.getHromosomeSecondStr().substring(0, random)
+                    + (individ.getHromosomeSecondStr().charAt(random) == '0' ? '1' : '0')
+                    + individ.getHromosomeSecondStr().substring(random + 1);
+            individ.setHromosomeSecondStr(tmpStr);
+        }
+        recalc_X_Y(individ);
     }
 
     /// Скрещивание
-    public Individ crossbreeding(MyPair<Individ, Individ> pair, int N) {
-        Individ individ_first = new Individ();
-        Individ individ_second = new Individ();
+    public Individ crossbreeding(MyPair<Individ, Individ> pair, int N) throws Exception {
+        Individ individ_first = new Individ(0);
+        Individ individ_second = new Individ(0);
 
-        int areaSize = Individ.ARR_SIZE / N;
+        // Скрещиваем первую хромосому пары
+        MyPair<String, String> firstHromosoms =
+                this.crossHromos(pair.getFirst().getHromosomeFirstStr(), pair.getSecond().getHromosomeFirstStr(), N);
+        individ_first.setHromosomeFirstStr(firstHromosoms.getFirst());
+        individ_second.setHromosomeFirstStr(firstHromosoms.getSecond());
 
-        int iteration = 0;
+        // Скрещиваем вторую хромосому пары
+        MyPair<String, String> secondHromosoms =
+                this.crossHromos(pair.getFirst().getHromosomeSecondStr(), pair.getSecond().getHromosomeSecondStr(), N);
+        individ_first.setHromosomeSecondStr(secondHromosoms.getFirst());
+        individ_second.setHromosomeSecondStr(secondHromosoms.getSecond());
 
-        int index = 0;
-        for (int point = 0; point < N; point++) {
-            for (int i = 0; i < areaSize; i++) {
-                if (iteration % 2 == 0) {
-                    individ_first.getArr()[index] = pair.getFirst().getArr()[index];
-                    individ_second.getArr()[index] = pair.getSecond().getArr()[index];
-                } else {
-                    individ_first.getArr()[index] = pair.getSecond().getArr()[index];
-                    individ_second.getArr()[index] = pair.getFirst().getArr()[index];
-                }
-                index++;
+        // Пересчитываем значения X, Y
+        recalc_X_Y(individ_first);
+        recalc_X_Y(individ_second);
+
+        // Выбираем одного потомка
+        switch ("best"){
+            case "random":{
+                if (Math.random() > 0.5)
+                    return individ_first;
+                else
+                    return individ_second;
             }
-            iteration++;
+            case "best":{
+                if (abs(individ_first.getY()) > abs(individ_second.getY()))
+                    return individ_first;
+                else
+                    return individ_second;
+            }
+            default:{
+                throw new Exception("wrong param");
+            }
         }
-        for (int i = index; i < Individ.ARR_SIZE; i++) {
-            if (iteration % 2 == 0) {
-                individ_first.getArr()[index] = pair.getFirst().getArr()[index];
-                individ_second.getArr()[index] = pair.getSecond().getArr()[index];
+    }
+
+    // скрещиваем две строки
+    private MyPair<String, String> crossHromos(String str_1, String str_2, int N) {
+        String[] arr_1 = splitByNumber(str_1, N);
+        String[] arr_2 = splitByNumber(str_2, N);
+        String result_1 = "";
+        String result_2 = "";
+        for (int i = 0; i < arr_1.length; i++) {
+            if (i % 2 == 0) {
+                result_1 += arr_1[i];
+                result_2 += arr_2[i];
             } else {
-                individ_first.getArr()[index] = pair.getSecond().getArr()[index];
-                individ_second.getArr()[index] = pair.getFirst().getArr()[index];
+                result_1 += arr_2[i];
+                result_2 += arr_1[i];
             }
-            index++;
         }
-
-//        if (Math.random() > 0.5)
-//            return individ_first;
-//        else
-//            return individ_second;
-        double x_1 = individ_first.arrToNumber();
-        double x_2 = individ_second.arrToNumber();
-
-        individ_first.setX(x_1);
-        individ_second.setX(x_2);
-
-        individ_first.setFunc(func(x_1));
-        individ_second.setFunc(func(x_2));
-
-        if (abs(individ_first.getFunc()) > abs(individ_second.getFunc()))
-            return individ_first;
-        else
-            return individ_second;
+        return new MyPair<>(result_1, result_2);
+    }
+    // разбиваем строку на части
+    private static String[] splitByNumber(String str, int size) {
+        return (size < 1 || str == null) ? null : str.split("(?<=\\G.{" + size + "})");
     }
 
     // Создаем пары родителей( у наиболее сильной особи, шанс размножиться больше)
@@ -297,14 +312,11 @@ public class Calc {
     public List<Individ> generatePopulation(int size) {
         List<Individ> population = new ArrayList<>();
         for (int i = 0; i < size; i++) {
-            double result = generateX();
-            System.out.println("main = " + result);
-            Individ individ = new Individ(result);
+            double x = generateX();
+            System.out.println("generated x = " + x);
+            Individ individ = new Individ(x);
             population.add(individ);
-            System.out.println("real   = " + individ.arrToNumber());
-//            if (abs(individ.arrToInteger() - main) > 0.000000001)
-//                System.out.println("error");
-//            System.out.println();
+            System.out.println("verificate   = " + individ.getX_FromHromosome());
         }
         return population;
     }
@@ -312,7 +324,7 @@ public class Calc {
     public double generateX() {
         final int main = generateRandom(START, END);
         final int drob = generateRandom(START, Integer.MAX_VALUE / 10);
-        double result = main + (drob / Math.pow(10, 9));
+        double result = main + ((double)drob / Individ.POW);
         return result;
     }
 
