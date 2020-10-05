@@ -1,3 +1,9 @@
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Scanner;
+
 class Converter {
     // Helper function to xor
     // two characters
@@ -75,4 +81,7 @@ class Converter {
         System.out.println("if gray\t" + converter.binaryToInt(converter.graytoBinary(str)));
         System.out.println("if binary\t" + converter.binaryToInt(str));
     }
+
+
+
 }

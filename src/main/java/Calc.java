@@ -1,6 +1,13 @@
-import java.util.ArrayList;
-import java.util.List;
+import com.github.sh0nk.matplotlib4j.Plot;
+import com.github.sh0nk.matplotlib4j.PythonExecutionException;
+
+import java.io.*;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static java.lang.Math.*;
 
@@ -27,7 +34,7 @@ public class Calc {
     private int countIteration;
 
     public Calc() {
-        double log = log(COUNT_STEP) / log(2);
+        double log = log((double) COUNT_STEP) / log(2);
         Individ.ARR_SIZE = (int) Math.ceil(log);
         Individ.values = this.values;
 
@@ -61,8 +68,6 @@ public class Calc {
 
     public void start() throws Exception {
         List<Individ> list = generatePopulation(POPULATION_SIZE);
-
-
         // Считаем у всех функцию
         do {
             double maxFunc = 0;
@@ -121,11 +126,7 @@ public class Calc {
             for (Individ individ : list) {
                 if (Math.random() > 0.55) {
                     // мутации подвергается только 33 процента
-//                    mutation(individ);
-                    int random = generateRandom(0, COUNT_STEP);
-                    individ.CHANGE_X(random);
-                    individ.getX();
-
+                    mutation(individ);
                     recalcValues(individ);
                     System.out.print("");
                 }
@@ -163,20 +164,77 @@ public class Calc {
             System.out.println("//////////////////////////////////////////////////////////////////////");
 
             countIteration++;
-            int countCompare = 0;
-            for (int i = 0; i < list.size(); i++) {
-                Individ individ = list.get(i);
-                double x = individ.getX();
-                if (Math.abs(needX - x) < 0.01)
-                    countCompare++;
-            }
-            if (countCompare > list.size() / 2)
-                break;
+//            int countCompare = 0;
+//            for (int i = 0; i < list.size(); i++) {
+//                Individ individ = list.get(i);
+//                double x = individ.getX();
+//                if (Math.abs(needX - x) < 0.01)
+//                    countCompare++;
+//            }
+//            if (countCompare > list.size() / 2)
+//                break;
 
-        } while (true);
+        } while (countIteration < 100);
+
+        List<Individ> collect = list.stream().sorted((o1, o2) -> {
+            return Double.compare(abs(o1.getFunc()), abs(o2.getFunc()));
+        }).collect(Collectors.toList());
+        double average_x = collect.get(0).getX();
+        double average_y = collect.get(0).getFunc();
 
         System.out.println("============================================================");
+        System.out.println("average_x = " + average_x + " \t\t average_y = " + average_y);
         System.out.println(countIteration++);
+        createGraphic(average_x, average_y);
+        executeCommand("start.bat");
+
+    }
+
+
+
+    public void createGraphic(double average_x, double average_y) throws IOException, PythonExecutionException {
+        List<Double> x = new ArrayList<>();
+        List<Double> y = new ArrayList<>();
+        for (double i = 0; i < END; i += 0.001) {
+            x.add(i);
+            y.add(function.apply(i));
+        }
+        String splitter = "    ";
+        try (FileWriter writer = new FileWriter("graphic.txt", false)) {
+            for (Double aDouble : x) {
+                writer.write(new DecimalFormat("#0.00000").format(aDouble).replace(",", "."));
+                writer.write(splitter);
+            }
+            writer.append('\n');
+            for (Double aDouble : y) {
+                writer.write(new DecimalFormat("#0.00000").format(aDouble).replace(",", "."));
+                writer.write(splitter);
+            }
+            writer.append('\n');
+
+            writer.write(new DecimalFormat("#0.00000").format(average_x).replace(",", ".")  +
+                    splitter +
+                    new DecimalFormat("#0.00000").format(average_y).replace(",", ".")
+            );
+            writer.flush();
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
+
+
+//        Plot plt = Plot.create();
+//
+//        plt.plot()
+//                .add(x, y)
+//                .label("label")
+//                .linestyle("--");
+//        plt.xlabel("xlabel");
+//
+//        plt.ylabel("ylabel");
+//        plt.text(0.5, 0.2, "text");
+//        plt.title("Title!");
+//        plt.legend();
+//        plt.show();
     }
 
     public void recalcValues(Individ individ) {
@@ -206,18 +264,25 @@ public class Calc {
 
     // Мутация
     public void mutation(Individ individ) {
-        individ.getX();
-        // реверс
-        int random = generateRandom(0, Individ.ARR_SIZE);
-        individ.setStr(changeCharacter(individ.getStr(), random));
-        individ.getX();
+        if (false) {
+            individ.getX();
+            // реверс
+            int random = generateRandom(0, Individ.ARR_SIZE);
+            individ.setStr(changeCharacter(individ.getStr(), random));
+            individ.getX();
 
-        individ.getX();
-        // реверс
-        int random2 = generateRandom(0, Individ.ARR_SIZE);
-        individ.setStr(changeCharacter(individ.getStr(), random2));
-        individ.getX();
-        System.out.print("");
+            individ.getX();
+            // реверс
+            int random2 = generateRandom(0, Individ.ARR_SIZE);
+            individ.setStr(changeCharacter(individ.getStr(), random2));
+            individ.getX();
+            System.out.print("");
+        } else {
+            int random = generateRandom(0, COUNT_STEP);
+            individ.CHANGE_X(random);
+            individ.getX();
+        }
+
     }
 
     private String changeCharacter(String s, int index) {
@@ -358,4 +423,34 @@ public class Calc {
         System.out.println("x = " + modul.x + "\t" + "y = " + modul.y);
         System.out.println("x = " + 35 + "\t" + "y = " + func(35));
     }*/
+
+    private void executeCommand(String command) {
+        try {
+            logg(command);
+            Process process = Runtime.getRuntime().exec(command);
+            logOutput(process.getInputStream(), "");
+            logOutput(process.getErrorStream(), "Error: ");
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void logOutput(InputStream inputStream, String prefix) {
+        new Thread(() -> {
+            Scanner scanner = new Scanner(inputStream, "UTF-8");
+            while (scanner.hasNextLine()) {
+                synchronized (this) {
+                    logg(prefix + scanner.nextLine());
+                }
+            }
+            scanner.close();
+        }).start();
+    }
+
+    private static SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss:SSS");
+
+    private synchronized void logg(String message) {
+        System.out.println(format.format(new Date()) + ": " + message);
+    }
 }
