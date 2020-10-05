@@ -1,4 +1,3 @@
-import com.github.sh0nk.matplotlib4j.Plot;
 import com.github.sh0nk.matplotlib4j.PythonExecutionException;
 
 import java.io.*;
@@ -7,13 +6,13 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static java.lang.Math.*;
 
 
 public class Calc {
 
+    public static boolean DEBUG = false;
     public double MNOGITEL = 1.01;
 
     public static int START = 0;
@@ -27,8 +26,9 @@ public class Calc {
     public Function<Double, Double> function = new Function<Double, Double>() {
         @Override
         public Double apply(Double x) {
-            return (x - 3) * (x - 2) * (x - 2.5) * cos(x);
+//            return (x - 3) * (x - 2) * (x - 2.5) * cos(x);
 //            return (0.8 * cos(0.5 * x) + cos(x)) * (x - 4);
+            return (0.8 * cos(0.5 * x) + cos(0.5 * x)) * (x - 4);
         }
     };
     private int countIteration;
@@ -53,12 +53,12 @@ public class Calc {
                 max_x = value;
                 max_y = tmp_y;
             }
-            //System.out.println("x = " + value + "\t y = " + tmp_y);
+            //print("x = " + value + "\t y = " + tmp_y);
         }
-        System.out.println("====MAX======");
-        System.out.println("x = " + max_x + "\t y = " + max_y);
+        printDebug("====MAX======");
+        printDebug("x = " + max_x + "\t y = " + max_y);
         needX = max_x;
-        System.out.println();
+        printDebug("");
     }
 
 //    public double func(double x) {
@@ -80,8 +80,8 @@ public class Calc {
                     maxFunc = func;
                 }
             }
-            System.out.println("maxFunc = " + maxFunc);
-            System.out.println("maxFunc *" + MNOGITEL + " = " + maxFunc * MNOGITEL);
+            printDebug("maxFunc = " + maxFunc);
+            printDebug("maxFunc *" + MNOGITEL + " = " + maxFunc * MNOGITEL);
             // Считаем коэффициент выживаемости
             for (int i = 0; i < list.size(); i++) {
                 Individ individ = list.get(i);
@@ -96,13 +96,13 @@ public class Calc {
             }
             // Считаем коэффициент выживаемости в процентах
             double sumV = 0.0;
-            System.out.println("===========================");
+            printDebug("===========================");
             for (int i = 0; i < list.size(); i++) {
                 Individ individ = list.get(i);
                 final double v = (1.0 / individ.getDistance()) / sum;
                 individ.setSurvivePercent(v);
                 sumV += v;
-                System.out.println("individ(" + i + ") " +
+                printDebug("individ(" + i + ") " +
                         "x = " + individ.getX() +
                         "\tfunc = " + individ.getFunc() +
                         "\tdist = " + individ.getDistance() +
@@ -131,37 +131,37 @@ public class Calc {
                     System.out.print("");
                 }
             }
-            System.out.println("////////////////////////mutation://////////////////////////////////////////////");
+            printDebug("////////////////////////mutation://////////////////////////////////////////////");
             for (int i = 0; i < list.size(); i++) {
                 Individ individ = list.get(i);
-                System.out.println("individ(" + i + ") " +
+                printDebug("individ(" + i + ") " +
                         "x = " + individ.getX() +
                         "\tfunc = " + individ.getFunc() +
                         "\tdist = " + individ.getDistance() +
                         "\t" + individ.getSurvivePercent() + "%");
 
             }
-            System.out.println("//////////////////////////////////////////////////////////////////////");
+            printDebug("//////////////////////////////////////////////////////////////////////");
             // СЕЛЕКЦИЯ
             for (int i = list.size() - 1; i >= 0; i--) {
                 Individ individ = list.get(i);
                 if (individ.getX() < START || individ.getX() > END)
                     list.remove(individ);
             }
-            System.out.println("list.size() = " + list.size());
+            printDebug("list.size() = " + list.size());
             list = selection(list);
 
-            System.out.println("////////////////////////selection://////////////////////////////////////////////");
+            printDebug("////////////////////////selection://////////////////////////////////////////////");
             for (int i = 0; i < list.size(); i++) {
                 Individ individ = list.get(i);
-                System.out.println("individ(" + i + ") " +
+                printDebug("individ(" + i + ") " +
                         "x = " + individ.getX() +
                         "\tfunc = " + individ.getFunc() +
                         "\tdist = " + individ.getDistance() +
                         "\t" + individ.getSurvivePercent() + "%");
 
             }
-            System.out.println("//////////////////////////////////////////////////////////////////////");
+            printDebug("//////////////////////////////////////////////////////////////////////");
 
             countIteration++;
 //            int countCompare = 0;
@@ -174,7 +174,7 @@ public class Calc {
 //            if (countCompare > list.size() / 2)
 //                break;
 
-        } while (countIteration < 100);
+        } while (countIteration < 1000);
 
         List<Individ> collect = list.stream().sorted((o1, o2) -> {
             return Double.compare(abs(o1.getFunc()), abs(o2.getFunc()));
@@ -184,12 +184,11 @@ public class Calc {
 
         System.out.println("============================================================");
         System.out.println("average_x = " + average_x + " \t\t average_y = " + average_y);
-        System.out.println(countIteration++);
+        printDebug(countIteration++);
         createGraphic(average_x, average_y);
         executeCommand("start.bat");
 
     }
-
 
 
     public void createGraphic(double average_x, double average_y) throws IOException, PythonExecutionException {
@@ -212,13 +211,13 @@ public class Calc {
             }
             writer.append('\n');
 
-            writer.write(new DecimalFormat("#0.00000").format(average_x).replace(",", ".")  +
+            writer.write(new DecimalFormat("#0.00000").format(average_x).replace(",", ".") +
                     splitter +
                     new DecimalFormat("#0.00000").format(average_y).replace(",", ".")
             );
             writer.flush();
         } catch (IOException ex) {
-            System.out.println(ex.getMessage());
+            printDebug(ex.getMessage());
         }
 
 
@@ -372,14 +371,14 @@ public class Calc {
         List<Individ> population = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             final int random = generateRandom(0, COUNT_STEP);
-            System.out.println("random = " + random);
+            printDebug("random = " + random);
             Individ individ = new Individ(random);
             individ.getX();
             population.add(individ);
-            System.out.println("real   = " + individ.getX());
+            printDebug("real   = " + individ.getX());
 //            if (abs(individ.arrToInteger() - random) > 0.000000001)
-//                System.out.println("error");
-//            System.out.println();
+//                print("error");
+//            print();
         }
         return population;
     }
@@ -420,8 +419,8 @@ public class Calc {
         }
 
 
-        System.out.println("x = " + modul.x + "\t" + "y = " + modul.y);
-        System.out.println("x = " + 35 + "\t" + "y = " + func(35));
+        print("x = " + modul.x + "\t" + "y = " + modul.y);
+        print("x = " + 35 + "\t" + "y = " + func(35));
     }*/
 
     private void executeCommand(String command) {
@@ -451,6 +450,22 @@ public class Calc {
     private static SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss:SSS");
 
     private synchronized void logg(String message) {
-        System.out.println(format.format(new Date()) + ": " + message);
+        printDebug(format.format(new Date()) + ": " + message);
+    }
+
+
+    public void printDebug(String x) {
+        if (DEBUG)
+            System.out.println(x);
+    }
+
+    public void printDebug(Integer x) {
+        if (DEBUG)
+            System.out.println(x);
+    }
+
+    public void printDebug(Double x) {
+        if (DEBUG)
+            System.out.println(x);
     }
 }
